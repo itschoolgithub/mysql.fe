@@ -1,14 +1,12 @@
 <template>
 {{ title }}
-<button
-@click="loadTitle"
->Загрузить данные</button>
 <table>
     <tr>
         <td>ID</td>
         <td>Имя</td>
         <td>Фамилия</td>
         <td>Возраст</td>
+        <td></td>
     </tr>
     <tr
         v-for="user in users"
@@ -18,6 +16,14 @@
         <td>{{ user.firstname }}</td>
         <td>{{ user.secondname }}</td>
         <td>{{ user.age }}</td>
+        <td>
+            <button
+                @click="editUser(user)"
+            >📝</button>
+            <button
+                @click="deleteUser(user.id)"
+            >❌</button>
+        </td>
     </tr>
 </table>
 <form>
@@ -39,6 +45,10 @@
     <button
         @click.prevent="addUser"
     >Создать пользователя</button>
+    <button
+        v-if="current"
+        @click.prevent="updateUser"
+    >Обновить пользователя</button>
 </form>
 </template>
 
@@ -49,10 +59,15 @@ data() {
     return {
         title: '',
         users: [],
+        current: null,
         firstname: '',
         secondname: '',
         age: null
     }
+},
+mounted() {
+    this.loadTitle();
+    
 },
 methods: {
     async loadTitle() {
@@ -66,6 +81,36 @@ methods: {
             secondname: this.secondname,
             age: this.age
         })
+        this.clearForm();
+        this.loadTitle();
+    },
+    clearForm() {
+        this.current = null;
+        this.firstname = '';
+        this.secondname = '';
+        this.age = null;
+    },
+    editUser(user) {
+        this.firstname = user.firstname;
+        this.secondname = user.secondname;
+        this.age = user.age;
+        this.current = user.id;
+    },
+    async deleteUser(id) {
+        if(confirm('Удалить?')) {
+            await axios.delete('http://mysql.be/index.php?id=' + id);
+            this.loadTitle();
+        }
+    },
+    async updateUser() {
+        await axios.put('http://mysql.be/index.php', {
+            id: this.current,
+            firstname: this.firstname,
+            secondname: this.secondname,
+            age: this.age
+        });
+        this.clearForm();
+        this.loadTitle();
     }
 }
 }
